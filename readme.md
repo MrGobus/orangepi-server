@@ -34,6 +34,7 @@ Orange PI Zero - 1 штука
 [Ubuntu Server от Armbian для Orange PI Zero](https://www.armbian.com/orange-pi-zero/)
 
 Программа для чтения и записи образов (.img) на флеш карту.
+[etcher.io](https://etcher.io/)
 [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/)
 
 Программа для подключения по ssh.
@@ -72,37 +73,53 @@ password: 1234
 
 Для настройки системы можно использовать программу armbian-config... Через нее можно и сеть настроить, и программы поставить, но это не наш путь...
 
-# Установка фиксированного IP
-
-Открываем файл настройки сети.
-
-```
-sudo nano /etc/network/interfaces
-```
-
-Далее находим и правим iface блок указывая static. Также указываем значения IP адреса, маску сети и т.п. У меня получилось как то так.
-
-```
-iface eth0 inet static
-address 192.168.1.100
-netmask 255.255.255.0
-gateway 192.168.1.1
-dns-nameservers 8.8.8.8 8.8.4.4
-```
-
-Жмем Ctrl+X затем Y для сохранения изменений.
-
-```
-sudo reboot
-```
-
-После перезагрузки IP всегда будет 192.168.1.100.
-
 # Обновление
 
 ```
 sudo apt-get update
 sudo apt-get upgrade
+```
+
+после успешного выполнения
+
+```
+sudo reboot
+```
+
+# Установка фиксированного IP
+
+Для настройки IP используем утилиты nmtui, nmcli либо armbian-config. Настройка через /etc/network/interfaces как я понял deprecated. По другой информации все разбили на файлы... Итого: ничего не понятно... Бесит.
+
+## nmcli
+
+Получаем список соединений
+
+```
+nmcli connection show
+```
+
+В списке находим название соединения и получаем подробную информацию
+
+```
+nmcli connection show 'Wired connection 1'
+```
+
+Модифицируем нужные нам параметры (имена параметров смотрим в списке полученном ранее)
+
+```
+sudo nmcli connection modify 'Wired connection 1' ipv4.address 192.168.1.100/24 ipv4.gateway 192.168.1.1 ipv4.dns 192.168.1.1 +ipv4.dns 8.8.8.8
+```
+
+Перезагрузка
+
+```
+sudo reboot
+```
+
+# Установка timezone
+
+```
+sudo dpkg-reconfigure tzdata
 ```
 
 # Установка Apache, PHP и MySQL
@@ -117,10 +134,16 @@ sudo apt-get install apache2 php7.0 php7.0-gd php7.0-json php7.0-mysql php7.0-xm
 sudo phpenmod mysqli
 ```
 
-Если все прошло успешно то по адресу http://192.168.1.100/ будет страница с информацией об apache. Находится она по адресу /var/www/html/index.html. На странице много полезной информации, но нам она не нужна, удаляем ее.
+Если все прошло успешно, то по адресу http://192.168.1.100/ будет страница с информацией об apache. Находится она по адресу /var/www/html/index.html. На странице много полезной информации, но нам она не нужна, удаляем ее.
 
 ```
 sudo rm -f /var/www/html/index.html
+```
+
+Или переименовываем
+
+```
+sudo mv /var/www/html/index.html /var/www/html/apache_index.html
 ```
 
 По умолчанию document_root сервера /var/www/html. Папка защищена от записи, лежит в системном каталоге, сменить ее жуткая морока... По этому создадим папку в домашнем каталоге и зададим на нее постоянную ссылку. Папку пользователя использовать не будем, так как в ней хранится системный мусор которые не стоит показывать людям =) (история bash, mysql и т.п.) Создадим папку html которую смонтируем в виде постоянной ссылки под именем mrgobus, тогда папка html на сервере будет видна как http://192.168.1.100/mrgobus.
