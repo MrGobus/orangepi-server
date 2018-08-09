@@ -332,7 +332,7 @@ sudo sysctl vm.vfs_cache_pressure=50
 echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.conf
 ```
 
-Отключение /swapfile
+Отключение /swapfile (может пригодиться для изменения размера свап файла)
 
 ```
 sudo swapoff -v /swapfile
